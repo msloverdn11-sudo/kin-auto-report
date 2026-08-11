@@ -1,1 +1,84 @@
+name: 지식iN 자동 발굴 및 카톡 보고
 
+on:
+  schedule:
+    # 모두 UTC 기준. KST = UTC+9
+    - cron: "0 0 * * *"   # 매일 09:00 KST (아침) → 4개
+    - cron: "0 4 * * *"   # 매일 13:00 KST (점심) → 3개
+    - cron: "0 10 * * *"  # 매일 19:00 KST (저녁) → 3개
+  workflow_dispatch:
+    inputs:
+      batch_target:
+        description: "이번 실행에서 찾을 질문 개수 (수동 테스트용)"
+        required: false
+        default: "2"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 의존성 설치
+        run: pip install requests --quiet
+
+      - name: 이번 실행의 배치 목표치 결정
+        id: batch
+        run: |
+          # cron 스케줄에 따라 아침 4개 / 점심 3개 / 저녁 3개로 분배 (합계 하루 10개)
+          if [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
+            echo "target=4" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 4 * * *" ]; then
+            echo "target=3" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 10 * * *" ]; then
+            echo "target=3" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=${{ github.event.inputs.batch_target || '2' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 카카오 액세스 토큰 갱신
+        id: kakao
+        env:
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+        run: python scripts/refresh_kakao_token.py
+
+      - name: 지식iN 발굴 + 답변생성 + 카톡전송
+        env:
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          KAKAO_ACCESS_TOKEN: ${{ steps.kakao.outputs.access_token }}
+          GOOGLE_CSE_KEY: ${{ secrets.GOOGLE_CSE_KEY }}
+          GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+          BATCH_TARGET: ${{ steps.batch.outputs.target }}
+        run: python scripts/kin_auto_report.py
+
+      - name: 카카오 refresh_token 최신값 저장 (변경된 경우)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_FOR_SECRETS }}
+        run: |
+          NEW_RT="${{ steps.kakao.outputs.refresh_token }}"
+          if [ -n "$NEW_RT" ]; then
+            gh secret set KAKAO_REFRESH_TOKEN --repo "${{ github.repository }}" --body "$NEW_RT"
+          fi
+
+      - name: 상태 파일(state/kin_state.json) 커밋
+        if: always()
+        run: |
+          git config user.name "kin-auto-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state/kin_state.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore: kin 자동화 상태 업데이트 [skip ci]"
+          git push || true
