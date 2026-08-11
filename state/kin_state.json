@@ -1,27 +1,31 @@
 {
   "used_ids": [
-    "9e2454c4fb090e7b",
-    "ae107c7c8889da3d",
-    "a217e4982c1b3956",
-    "6c6a9f37c16bd192",
-    "74d319454ce11c79",
-    "b5bc7c4bf267719d",
-    "9a1c5a11015325d6",
-    "149f5fcc394117a0",
-    "8ee5553afee00e87",
-    "2f0e3c48e9e29391",
-    "a9c67a3e95e5915c",
-    "846cf038e0f190aa",
     "274e4ebab13e88f9",
-    "1c9a26fa80b9e055",
+    "2f0e3c48e9e29391",
     "b4e3ba27c7638770",
-    "83d09cd09f7812e2",
-    "fa2e9e2e7b7a3992",
-    "de3696ac209518b0",
+    "0fdd81076bad8cc3",
     "ba5cb5b77a01dc46",
-    "3f63b08b94ae3220"
+    "846cf038e0f190aa",
+    "a9c67a3e95e5915c",
+    "b5bc7c4bf267719d",
+    "de3696ac209518b0",
+    "9a1c5a11015325d6",
+    "21341d710f4e4bd4",
+    "83d09cd09f7812e2",
+    "9fb64bd520b6626b",
+    "a217e4982c1b3956",
+    "3f63b08b94ae3220",
+    "dc14ff5aa4a13813",
+    "74d319454ce11c79",
+    "8ee5553afee00e87",
+    "1c9a26fa80b9e055",
+    "ae107c7c8889da3d",
+    "9e2454c4fb090e7b",
+    "fa2e9e2e7b7a3992",
+    "149f5fcc394117a0",
+    "6c6a9f37c16bd192"
   ],
-  "last_link_choice": "B",
+  "last_link_choice": "A",
   "log": [
     {
       "run_at_kst": "2026-08-11T13:25:29.350825+00:00",
@@ -34,6 +38,12 @@
       "batch_target": 4,
       "picked": 4,
       "sent": 3
+    },
+    {
+      "run_at_kst": "2026-08-11T19:02:11.234313+00:00",
+      "batch_target": 3,
+      "picked": 3,
+      "sent": 1
     }
   ]
 }
