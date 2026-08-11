@@ -1,5 +1,14 @@
 {
-  "used_ids": [],
-  "last_link_choice": "A",
-  "log": []
+  "used_ids": [
+    "6c6a9f37c16bd192"
+  ],
+  "last_link_choice": "B",
+  "log": [
+    {
+      "run_at_kst": "2026-08-11T13:25:29.350825+00:00",
+      "batch_target": 1,
+      "picked": 1,
+      "sent": 1
+    }
+  ]
 }
