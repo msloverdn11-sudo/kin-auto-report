@@ -30,7 +30,7 @@ NAVER_CLIENT_ID = os.environ["NAVER_CLIENT_ID"]
 NAVER_CLIENT_SECRET = os.environ["NAVER_CLIENT_SECRET"]
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 
 KAKAO_ACCESS_TOKEN = os.environ["KAKAO_ACCESS_TOKEN"]  # 워크플로에서 갱신 후 주입
 
