@@ -274,7 +274,7 @@ def strip_tags(s):
 # 5. Groq 호출 (분류 + 답변 생성)
 # ============================================================
 
-def groq_chat(messages, temperature=0.7, max_tokens=1200, retries=3):
+def groq_chat(messages, temperature=0.7, max_tokens=1200, retries=6):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -290,7 +290,7 @@ def groq_chat(messages, temperature=0.7, max_tokens=1200, retries=3):
         try:
             r = requests.post(url, headers=headers, json=payload, timeout=60)
             if r.status_code == 429:
-                wait = 5 * (attempt + 1)
+                wait = min(10 * (attempt + 1), 60)
                 log(f"Groq 429(레이트리밋), {wait}초 대기 후 재시도")
                 time.sleep(wait)
                 continue
@@ -600,13 +600,13 @@ def main():
 
             fit, reason = classify_question(title, desc, matched_topic)
             log(f"[분류] {fit} | {title[:40]} | (검색어: {query}) | {reason}")
+            time.sleep(1.5)  # 탈락하든 통과하든 Groq 호출 사이 완충(레이트리밋 방지)
             if not fit:
                 used_ids.add(qid)  # 탈락한 것도 재검토 방지 위해 기록(선택 사항)
                 continue
 
             picked.append((title, link, desc, matched_topic))
             used_ids.add(qid)
-            time.sleep(1)  # Groq/네이버 호출 사이 완충
 
     log(f"이번 배치에서 선정된 질문 수: {len(picked)} (시도한 검색어 {tried}개)")
 
