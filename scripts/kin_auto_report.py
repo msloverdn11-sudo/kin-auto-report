@@ -30,7 +30,7 @@ NAVER_CLIENT_ID = os.environ["NAVER_CLIENT_ID"]
 NAVER_CLIENT_SECRET = os.environ["NAVER_CLIENT_SECRET"]
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 
 KAKAO_ACCESS_TOKEN = os.environ["KAKAO_ACCESS_TOKEN"]  # 워크플로에서 갱신 후 주입
 
@@ -285,6 +285,7 @@ def groq_chat(messages, temperature=0.7, max_tokens=1200, retries=6):
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
+        "reasoning_effort": "low",  # gpt-oss 계열: 추론에 토큰을 너무 많이 쓰면 정작 답변이 잘림
     }
     for attempt in range(retries):
         try:
@@ -312,7 +313,7 @@ def classify_question(title, description, matched_topic=None):
         {"role": "system", "content": SYSTEM_PROMPT + "\n\n" + CLASSIFY_INSTRUCTIONS},
         {"role": "user", "content": f"질문 제목: {title}\n질문 요약(검색결과 스니펫): {description}{topic_hint}"},
     ]
-    raw = groq_chat(messages, temperature=0.0, max_tokens=200)
+    raw = groq_chat(messages, temperature=0.0, max_tokens=500)
     try:
         # 코드펜스가 붙어 나오는 경우 제거
         cleaned = raw.strip().strip("`").strip()
@@ -422,7 +423,7 @@ def build_answer(title, body_text, official_source, link_choice, blog_url_hint="
         {"role": "system", "content": SYSTEM_PROMPT + "\n\n" + TOPIC_ANCHORED_ANSWER_NOTE},
         {"role": "user", "content": context},
     ]
-    answer = groq_chat(messages, temperature=0.85, max_tokens=900)
+    answer = groq_chat(messages, temperature=0.85, max_tokens=2500)
     answer = answer.strip().strip('"').strip()
 
     import re
@@ -447,7 +448,7 @@ def build_answer(title, body_text, official_source, link_choice, blog_url_hint="
                                          "URL과 숫자를 제외한 다른 언어 문자를 절대 쓰지 마라. "
                                          "본문만 출력해라."},
         ]
-        answer = groq_chat(clean_messages, temperature=0.5, max_tokens=900).strip().strip('"').strip()
+        answer = groq_chat(clean_messages, temperature=0.5, max_tokens=2500).strip().strip('"').strip()
 
     if foreign_pattern.search(answer):
         log("재요청에도 여전히 이물질 문자 발견 - 강제로 제거")
@@ -462,7 +463,7 @@ def build_answer(title, body_text, official_source, link_choice, blog_url_hint="
                                          f"같은 내용을 유지하되 반드시 1,000자 이내로 다시 써라. "
                                          f"본문만 출력해라."},
         ]
-        answer = groq_chat(shrink_messages, temperature=0.5, max_tokens=900).strip().strip('"').strip()
+        answer = groq_chat(shrink_messages, temperature=0.5, max_tokens=2500).strip().strip('"').strip()
 
     if len(answer) > ANSWER_MAX_CHARS:
         log("재요청에도 여전히 길어서 하드컷 + 경고 표시")
